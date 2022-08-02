@@ -26,15 +26,14 @@ def lambda_handler(event, context):
         try:
             fn_name = event["ResourceProperties"]["FnName"]
             result = lambda_client.invoke(FunctionName=fn_name)
-            error = result.get("FunctionError")
-            if not error:
-                reason = "Initial definition download succeeded"
-                logger.info(reason)
-                return send(event, context, SUCCESS, {}, reason=reason)
-            else:
+            if error := result.get("FunctionError"):
                 reason = f"Initial definition download failed: {error}"
                 logger.error(reason)
                 return send(event, context, FAILED, {}, reason=reason)
+            else:
+                reason = "Initial definition download succeeded"
+                logger.info(reason)
+                return send(event, context, SUCCESS, {}, reason=reason)
         except botocore.exceptions.ClientError as e:
             logger.error(e)
             return send(event, context, FAILED, {}, reason=e)
